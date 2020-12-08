@@ -14,11 +14,21 @@ public:
 	void solve();
 
 private:
-    int (*m_board)[SUDOKU_SIZE][SUDOKU_SIZE];
+	struct State {
+		int cols_used[SUDOKU_SIZE];
+		int rows_used[SUDOKU_SIZE];
+		int sectors_used[SUDOKU_SIZE];
+		int (*board)[SUDOKU_SIZE][SUDOKU_SIZE];
+	};
 
-    int col_used[SUDOKU_SIZE];
-    int row_used[SUDOKU_SIZE];
-    int sector_used[SUDOKU_SIZE];
+	State main;
+	State backup;
+
+    int backup_board[SUDOKU_SIZE][SUDOKU_SIZE];
+
+	bool simpleSolve(int (*board)[SUDOKU_SIZE][SUDOKU_SIZE]);
+	void saveState();
+	void restoreState();
 
     int colGetUsed(int col);
     int rowGetUsed(int row);
