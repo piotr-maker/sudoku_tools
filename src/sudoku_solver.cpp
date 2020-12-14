@@ -3,10 +3,10 @@
 SudokuSolver::SudokuSolver(int (*board)[SUDOKU_SIZE][SUDOKU_SIZE]) {
 	this->main.board = board;
     for(int i = 0; i < SUDOKU_SIZE; i++) { 
-        this->main.rows_used[i] = this->rowGetUsed(i);
-        this->main.cols_used[i] = this->colGetUsed(i);
+        this->main.used_in_row[i] = this->rowGetUsed(i);
+        this->main.used_in_col[i] = this->colGetUsed(i);
         if(i % 3 == 0) {
-            for(int j = 0; j <= 6; j+=3) this->main.sectors_used[SECTOR(i, j)] = this->sectorGetUsed(i, j);
+            for(int j = 0; j <= 6; j+=3) this->main.used_in_square[SQUARE(i, j)] = this->sectorGetUsed(i, j);
         }
     }
 }
@@ -23,13 +23,13 @@ void SudokuSolver::solve() {
 	for(int r = 0; r < SUDOKU_SIZE; r++) {
 		for(int c = 0; c < SUDOKU_SIZE; c++) {
 			count = 0;
-			used = this->main.rows_used[r] | this->main.cols_used[c] | this->main.sectors_used[SECTOR(r, c)];
+			used = this->main.used_in_row[r] | this->main.used_in_col[c] | this->main.used_in_square[SQUARE(r, c)];
 			for(int i = 0; i < SUDOKU_SIZE; i++) if(!(used & (1<<i))) {count += 1; value = i;}
 			if(count == 2) {
 				(*this->main.board)[r][c] = value + 1;
-				this->main.cols_used[c] |= (1<<value);
-				this->main.rows_used[r] |= (1<<value);
-				this->main.sectors_used[SECTOR(r, c)] |= (1<<value);
+				this->main.used_in_col[c] |= (1<<value);
+				this->main.used_in_row[r] |= (1<<value);
+				this->main.used_in_square[SQUARE(r, c)] |= (1<<value);
 				solved = this->simpleSolve(this->main.board);
 				if(solved) goto end;
 				else this->restoreState();
@@ -58,13 +58,13 @@ bool SudokuSolver::simpleSolve(int (*board)[SUDOKU_SIZE][SUDOKU_SIZE]) {
 				if(r == 0) if(this->checkCol(c)) simple = true;
         	    if((*this->main.board)[r][c] == 0) {
         	        count = 0;
-        	        used = this->main.rows_used[r] | this->main.cols_used[c] | this->main.sectors_used[SECTOR(r, c)];
+        	        used = this->main.used_in_row[r] | this->main.used_in_col[c] | this->main.used_in_square[SQUARE(r, c)];
         	        for(int i = 0; i < SUDOKU_SIZE; i++) if(!(used & (1<<i))) {count += 1; value = i;} 
         	        if(count == 1) {
         	            (*this->main.board)[r][c] = value + 1;
-        	            this->main.rows_used[r] |= (1<<value);
-        	            this->main.cols_used[c] |= (1<<value);
-        	            this->main.sectors_used[SECTOR(r, c)] |= (1<<value);
+        	            this->main.used_in_row[r] |= (1<<value);
+        	            this->main.used_in_col[c] |= (1<<value);
+        	            this->main.used_in_square[SQUARE(r, c)] |= (1<<value);
 						simple = true;
         	        } else solved = false;
         	    }
@@ -77,18 +77,18 @@ bool SudokuSolver::simpleSolve(int (*board)[SUDOKU_SIZE][SUDOKU_SIZE]) {
 
 void SudokuSolver::saveState() {
 	for(int r = 0; r < SUDOKU_SIZE; r++) {
-		this->backup.cols_used[r] = this->main.cols_used[r];
-		this->backup.rows_used[r] = this->main.rows_used[r];
-		this->backup.sectors_used[r] = this->main.sectors_used[r];
+		this->backup.used_in_col[r] = this->main.used_in_col[r];
+		this->backup.used_in_row[r] = this->main.used_in_row[r];
+		this->backup.used_in_square[r] = this->main.used_in_square[r];
 		for(int c = 0; c < SUDOKU_SIZE; c++) backup_board[r][c] = (*this->main.board)[r][c];
 	}
 }
 
 void SudokuSolver::restoreState() {
 	for(int r = 0; r < SUDOKU_SIZE; r++) {
-		this->main.cols_used[r] = this->backup.cols_used[r];
-		this->main.rows_used[r] = this->backup.rows_used[r];
-		this->main.sectors_used[r] = this->backup.sectors_used[r];
+		this->main.used_in_col[r] = this->backup.used_in_col[r];
+		this->main.used_in_row[r] = this->backup.used_in_row[r];
+		this->main.used_in_square[r] = this->backup.used_in_square[r];
 		for(int c = 0; c < SUDOKU_SIZE; c++) (*this->main.board)[r][c] = backup_board[r][c];
 	}
 }
@@ -133,11 +133,11 @@ bool SudokuSolver::checkCol(int col) {
 	bool found = false;
 
 	for(int i = 0; i < SUDOKU_SIZE; i++) {
-		if(this->main.cols_used[col] & (1<<i)) continue;
+		if(this->main.used_in_col[col] & (1<<i)) continue;
 		count = 0;
 		for(int r = 0; r < SUDOKU_SIZE; r++) {
 			if((*this->main.board)[r][col] != 0) continue;
-			used = this->main.rows_used[r] | this->main.cols_used[col] | this->main.sectors_used[SECTOR(r, col)];
+			used = this->main.used_in_row[r] | this->main.used_in_col[col] | this->main.used_in_square[SQUARE(r, col)];
 			if(!(used & (1<<i))) {
 				count += 1;
 				row_index = r;
@@ -146,9 +146,9 @@ bool SudokuSolver::checkCol(int col) {
 
 		if(count == 1) {
 			(*this->main.board)[row_index][col] = i + 1;
-            this->main.rows_used[row_index] |= (1<<(i));
-            this->main.cols_used[col] |= (1<<(i));
-            this->main.sectors_used[SECTOR(row_index, col)] |= (1<<(i));
+            this->main.used_in_row[row_index] |= (1<<(i));
+            this->main.used_in_col[col] |= (1<<(i));
+            this->main.used_in_square[SQUARE(row_index, col)] |= (1<<(i));
 			found = true;
 		}
 	}
@@ -164,11 +164,11 @@ bool SudokuSolver::checkRow(int row) {
 	bool found = false;
 
 	for(int i = 0; i < SUDOKU_SIZE; i++) {
-		if(this->main.rows_used[row] & (1<<i)) continue;
+		if(this->main.used_in_row[row] & (1<<i)) continue;
 		count = 0;
 		for(int c = 0; c < SUDOKU_SIZE; c++) {
 			if((*this->main.board)[row][c] != 0) continue;
-			used = this->main.rows_used[row] | this->main.cols_used[c] | this->main.sectors_used[SECTOR(row, c)];
+			used = this->main.used_in_row[row] | this->main.used_in_col[c] | this->main.used_in_square[SQUARE(row, c)];
 			if(!(used & (1<<i))) {
 				count += 1;
 				col_index = c;
@@ -177,9 +177,9 @@ bool SudokuSolver::checkRow(int row) {
 
 		if(count == 1) {
 			(*this->main.board)[row][col_index] = i + 1;
-            this->main.rows_used[row] |= (1<<(i));
-            this->main.cols_used[col_index] |= (1<<(i));
-            this->main.sectors_used[SECTOR(row, col_index)] |= (1<<(i));
+            this->main.used_in_row[row] |= (1<<(i));
+            this->main.used_in_col[col_index] |= (1<<(i));
+            this->main.used_in_square[SQUARE(row, col_index)] |= (1<<(i));
 			found = true;
 		}
 	}
@@ -191,7 +191,7 @@ bool SudokuSolver::checkRow(int row) {
 bool SudokuSolver::checkSector(int row, int col) {
     int col_index;
     int row_index;
-    int sector = SECTOR(row, col);
+    int sector = SQUARE(row, col);
     int count[SUDOKU_SIZE];
     int used;
 	bool found = false;
@@ -199,11 +199,11 @@ bool SudokuSolver::checkSector(int row, int col) {
     for(int i = 0; i < SUDOKU_SIZE; i++) count[i] = 0;
 
     for(int i = 0; i < SUDOKU_SIZE; i++) {
-        if(this->main.sectors_used[sector] & (1<<i)) continue;
+        if(this->main.used_in_square[sector] & (1<<i)) continue;
         for(int r = 0; r < COLS_IN_SEC; r++) {
             for(int c = 0; c < COLS_IN_SEC; c++) {
                 if((*this->main.board)[row + r][col + c] != 0) continue;
-                used = this->main.rows_used[row + r] | this->main.cols_used[col + c] | this->main.sectors_used[sector];
+                used = this->main.used_in_row[row + r] | this->main.used_in_col[col + c] | this->main.used_in_square[sector];
                 if(!(used & (1<<i))) {
                     count[i] += 1;
                     row_index = row + r;
@@ -214,9 +214,9 @@ bool SudokuSolver::checkSector(int row, int col) {
 
         if(count[i] == 1) {
             (*this->main.board)[row_index][col_index] = i + 1;
-            this->main.rows_used[row_index] |= (1<<(i));
-            this->main.cols_used[col_index] |= (1<<(i));
-            this->main.sectors_used[sector] |= (1<<(i));
+            this->main.used_in_row[row_index] |= (1<<(i));
+            this->main.used_in_col[col_index] |= (1<<(i));
+            this->main.used_in_square[sector] |= (1<<(i));
 			found = true;
         }
     }

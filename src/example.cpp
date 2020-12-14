@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sudoku_solver.h>
+#include <sudoku_generator.h>
 
 void print(int board[SUDOKU_SIZE][SUDOKU_SIZE]) {
 	int separators = COLS_IN_SEC + 1;
@@ -19,6 +20,18 @@ void print(int board[SUDOKU_SIZE][SUDOKU_SIZE]) {
 		printf("\n");
 	}
 }
+
+int board_empty[SUDOKU_SIZE][SUDOKU_SIZE] = { 
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0},
+    {0,0,0, 0,0,0, 0,0,0}
+};
 
 int board_medium[SUDOKU_SIZE][SUDOKU_SIZE] = { 
     {0,1,0, 0,0,0, 0,7,0},
@@ -69,10 +82,20 @@ int board_hardest[SUDOKU_SIZE][SUDOKU_SIZE] = {
 };
 
 int main(){
+	int count;
+
+	printf("Solver:\n");
 	print(board_hard);
     SudokuSolver solver(&board_hard);
     solver.solve();
-    printf("\n");
     print(board_hard);
+    printf("\n\n\n");
+	printf("Generator:\n");
+	SudokuGenerator generator(&board_empty);
+	count = generator.generate();
+	print(board_empty);
+	printf("Generated in: %d\n", count);
+	if(generator.isValid()) printf("Valid\n");
+	else printf("Not valid\n");
 	return 0;
 }

@@ -1,2 +1,4 @@
 example
 lib/*
+src/sudoku_cell.cpp
+inc/sudoku_cell.cpp

@@ -1,11 +1,7 @@
 #ifndef SUDOKUSOLVER_H
 #define SUDOKUSOLVER_H
 
-#define SUDOKU_SIZE 9
-#define COLS_IN_SEC 3
-
-#define SECTOR(row,column)	(((row/3) * 3) + (column/3))
-
+#include <settings.h>
 #include <cstdio>
 
 class SudokuSolver {
@@ -15,9 +11,9 @@ public:
 
 private:
 	struct State {
-		int cols_used[SUDOKU_SIZE];
-		int rows_used[SUDOKU_SIZE];
-		int sectors_used[SUDOKU_SIZE];
+		int used_in_col[SUDOKU_SIZE];
+		int used_in_row[SUDOKU_SIZE];
+		int used_in_square[SUDOKU_SIZE];
 		int (*board)[SUDOKU_SIZE][SUDOKU_SIZE];
 	};
 

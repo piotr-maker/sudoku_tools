@@ -4,13 +4,10 @@ SRC = src
 LIB = lib
 
 sudoku:
-	${CC} -c ${SRC}/sudoku_solver.cpp -o sudoku.o ${CFLAGS}
-	ar cr ${LIB}/libsudoku_solver.a sudoku.o
-	rm sudoku.o
-
-	#${CC} -c ${SRC}/sudoku_cell.cpp -o cell.o ${CFLAGS}
-	#ar cr ${LIB}/libsudoku_solver.a sudoku.o cell.o
-	#rm sudoku.o cell.o
+	${CC} -c ${SRC}/sudoku_generator.cpp -o generator.o ${CFLAGS}
+	${CC} -c ${SRC}/sudoku_solver.cpp -o solver.o ${CFLAGS}
+	ar cr ${LIB}/libsudoku_solver.a solver.o generator.o
+	rm solver.o generator.o
 
 example:
 	${CC} -c ${SRC}/example.cpp -o example.o ${CFLAGS}
